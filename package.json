@@ -1,0 +1,42 @@
+{
+  "name": "storion",
+  "version": "1.0.0",
+  "description": "Framework-agnostic client-side database with localStorage, sessionStorage, and IndexedDB. Create databases, tables, save/fetch records, and run JSON queries.",
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "types",
+    "README.md",
+    "docs"
+  ],
+  "scripts": {
+    "build": "node build.js",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "browser",
+    "database",
+    "localStorage",
+    "sessionStorage",
+    "indexeddb",
+    "query",
+    "offline",
+    "storage",
+    "framework-agnostic",
+    "react",
+    "vue",
+    "angular"
+  ],
+  "author": "",
+  "license": "MIT",
+  "sideEffects": false
+}
