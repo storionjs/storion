@@ -2,7 +2,7 @@
  * Schema helpers: normalize columns, validate config.
  */
 
-const COLUMN_TYPES = ['int', 'float', 'boolean', 'string'];
+const COLUMN_TYPES = ['int', 'float', 'boolean', 'string', 'json'];
 
 export function normalizeColumn(col) {
   if (typeof col === 'string') {
@@ -49,6 +49,16 @@ export function coerceValue(value, type) {
       if (typeof value === 'boolean') return value;
       const s = String(value).toLowerCase();
       return s === 'true' || s === '1' || s === 'yes';
+    case 'json':
+      if (typeof value === 'object') return value;
+      if (typeof value === 'string') {
+        try {
+          return JSON.parse(value);
+        } catch {
+          return value;
+        }
+      }
+      return value;
     case 'string':
     default:
       return String(value);

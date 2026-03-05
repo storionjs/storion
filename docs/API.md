@@ -49,7 +49,7 @@ Read-only. The database name.
 
 ### db.createTable(tableName, columns)
 
-Create a table. **columns** is an array of `string` (column name, type `string`) or `{ name, type }` with `type` in `'int' | 'float' | 'boolean' | 'string'`. An `id` column (type `int`) is added if missing.
+Create a table. **columns** is an array of `string` (column name, type `string`) or `{ name, type }` with `type` in `'int' | 'float' | 'boolean' | 'string' | 'json'`. An `id` column (type `int`) is added if missing.
 
 ```js
 await db.createTable('users', [

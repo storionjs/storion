@@ -104,6 +104,7 @@ document.getElementById('configFile').addEventListener('change', async (e) => {
 - `float` – number
 - `boolean` – true/false
 - `string` – text
+- `json` – JSON value (object or array). Values are stored as parsed JSON; when you pass a string, it will be `JSON.parse`d where possible.
 
 ## Optional: foreign key
 

@@ -3,7 +3,7 @@
  * Framework-agnostic; no DOM or storage dependencies.
  */
 
-const COLUMN_TYPES = ['int', 'float', 'boolean', 'string'];
+const COLUMN_TYPES = ['int', 'float', 'boolean', 'string', 'json'];
 
 export const QUERY_OPERATORS = [
   'eq', 'ne', 'gt', 'gte', 'lt', 'lte',
@@ -40,6 +40,16 @@ function coerceValue(value, type) {
     case 'boolean':
       if (typeof value === 'boolean') return value;
       return String(value).toLowerCase() === 'true' || String(value).toLowerCase() === '1' || String(value).toLowerCase() === 'yes';
+    case 'json':
+      if (typeof value === 'object') return value;
+      if (typeof value === 'string') {
+        try {
+          return JSON.parse(value);
+        } catch {
+          return value;
+        }
+      }
+      return value;
     case 'string':
     default:
       return String(value);
@@ -138,25 +148,37 @@ export function validateQuery(query, columns) {
   return { valid: true };
 }
 
+function toComparableString(value, type) {
+  if (value == null) return '';
+  if (type === 'json') {
+    try {
+      return JSON.stringify(value);
+    } catch {
+      return String(value);
+    }
+  }
+  return String(value);
+}
+
 function evaluatePredicate(row, condition, columns) {
   const { field, op, value } = condition;
   const type = getColumnType(columns, field);
   const raw = getRowValue(row, field);
   const cell = raw === undefined || raw === null ? null : coerceValue(raw, type);
 
-  const str = cell != null ? String(cell) : '';
+  const str = cell != null ? toComparableString(cell, type) : '';
   const strLower = str.toLowerCase();
-  const valueStr = value != null && value !== undefined ? String(value) : '';
+  const valueStr = value != null && value !== undefined ? toComparableString(value, type) : '';
   const valueStrLower = valueStr.toLowerCase();
 
   switch (op) {
     case 'eq':
       if (cell === null) return value === null || value === undefined;
-      if (type === 'string') return strLower === valueStrLower;
+      if (type === 'string' || type === 'json') return strLower === valueStrLower;
       return cell === coerceValue(value, type);
     case 'ne':
       if (cell === null) return value !== null && value !== undefined;
-      if (type === 'string') return strLower !== valueStrLower;
+      if (type === 'string' || type === 'json') return strLower !== valueStrLower;
       return cell !== coerceValue(value, type);
     case 'gt':
       if (cell == null) return false;
@@ -180,7 +202,10 @@ function evaluatePredicate(row, condition, columns) {
       const arr = Array.isArray(value) ? value : [];
       return arr.some(v => {
         const coerced = coerceValue(v, type);
-        if (type === 'string') return strLower === String(coerced).toLowerCase();
+        if (type === 'string' || type === 'json') {
+          const coercedStr = toComparableString(coerced, type).toLowerCase();
+          return strLower === coercedStr;
+        }
         return cell === coerced;
       });
     }
@@ -188,7 +213,10 @@ function evaluatePredicate(row, condition, columns) {
       const arr = Array.isArray(value) ? value : [];
       return !arr.some(v => {
         const coerced = coerceValue(v, type);
-        if (type === 'string') return strLower === String(coerced).toLowerCase();
+        if (type === 'string' || type === 'json') {
+          const coercedStr = toComparableString(coerced, type).toLowerCase();
+          return strLower === coercedStr;
+        }
         return cell === coerced;
       });
     }

@@ -45,7 +45,7 @@ The package uses a **JSON query object** to filter and sort table data. Use it w
 | `isNull`       | Value is null/undefined        | No                |
 | `isNotNull`    | Value is not null/undefined    | No                |
 
-String comparisons are **case-insensitive**. Column types (`int`, `float`, `boolean`, `string`) are used for type-aware comparison.
+String comparisons are **case-insensitive**. Column types (`int`, `float`, `boolean`, `string`, `json`) are used for type-aware comparison. For `json` columns, comparisons use the JSON string representation (e.g. `JSON.stringify`), so equality and string operators work on the serialized form of the value.
 
 ## OrderBy
 

@@ -20,7 +20,7 @@ export interface DBConfig {
 }
 
 export interface TableDef {
-  columns: Array<string | { name: string; type: 'int' | 'float' | 'boolean' | 'string'; references?: { table: string; column: string } }>;
+  columns: Array<string | { name: string; type: 'int' | 'float' | 'boolean' | 'string' | 'json'; references?: { table: string; column: string } }>;
 }
 
 export interface QueryWhere {
