@@ -1,4 +1,31 @@
+# Dependencies
 node_modules/
+
+# Build output
 dist/
+
+# Logs and debug
 *.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS
 .DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Coverage and test
+coverage/
+.nyc_output/
+
+# IDE / editor
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
