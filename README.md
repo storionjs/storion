@@ -174,7 +174,7 @@ Full API: [docs/API.md](docs/API.md).
 - **sessionStorage** – Cleared when the tab/window closes; same origin.
 - **indexedDB** – Async; larger quota; good for bigger datasets.
 
-All data for a given storage key is stored in one place (default key: `__BROWSER_DB__`). Multiple logical databases (different `name`s) can coexist under the same key.
+All data for a given storage key is stored in one place (default key: `__LS_DB__`). Multiple logical databases (different `name`s) can coexist under the same key.
 
 ## Usage with React / Vue / Angular
 

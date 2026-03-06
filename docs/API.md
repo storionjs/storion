@@ -7,7 +7,7 @@ Create or connect to a database. Returns a **Database** instance.
 - **options.name** (string) – Database name.
 - **options.storage** (`'localStorage' | 'sessionStorage' | 'indexedDB'`) – Storage backend.
 - **options.config** (object, optional) – Config object to create tables from. See [CONFIG_FORMAT.md](./CONFIG_FORMAT.md).
-- **options.storageKey** (string, optional) – Key used in storage (default: `__BROWSER_DB__`).
+- **options.storageKey** (string, optional) – Key used in storage (default: `__LS_DB__`).
 
 ```js
 const db = await createDatabase({

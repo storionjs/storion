@@ -4,7 +4,7 @@
  * Async adapters return Promises; sync adapters return values directly.
  */
 
-const STORAGE_KEY = '__BROWSER_DB__';
+const STORAGE_KEY = '__LS_DB__';
 
 function createLocalStorageAdapter(storageKey = STORAGE_KEY) {
   const key = storageKey;

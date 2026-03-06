@@ -10,7 +10,7 @@ export interface CreateDatabaseOptions {
   storage: StorageType;
   /** Optional config object to create DB and tables from */
   config?: DBConfig;
-  /** Optional storage key (default: __BROWSER_DB__) */
+  /** Optional storage key (default: __LS_DB__) */
   storageKey?: string;
 }
 

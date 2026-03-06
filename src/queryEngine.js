@@ -294,6 +294,6 @@ export function executeQuery(rows, columns, query) {
   const totalCount = result.length;
   const offset = query.offset != null && Number.isInteger(query.offset) ? query.offset : 0;
   const limit = query.limit != null && Number.isInteger(query.limit) ? query.limit : result.length;
-  const rows = result.slice(offset, offset + limit);
-  return { rows, totalCount };
+  const pageRows = result.slice(offset, offset + limit);
+  return { rows: pageRows, totalCount };
 }

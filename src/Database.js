@@ -25,7 +25,7 @@ function referencedValueExists(db, dbName, refTable, refCol, value) {
  * @param {string} options.name - Database name
  * @param {string} options.storage - 'localStorage' | 'sessionStorage' | 'indexedDB'
  * @param {Object} [options.config] - Optional config object to create DB and tables from (see docs/CONFIG_FORMAT.md)
- * @param {string} [options.storageKey] - Optional key to store data under (default: __BROWSER_DB__)
+ * @param {string} [options.storageKey] - Optional key to store data under (default: __LS_DB__)
  * @returns {Promise<Database>} Database instance
  */
 export async function createDatabase(options) {
