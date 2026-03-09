@@ -116,6 +116,79 @@ Delete a table. Fails if another table has a foreign key to it.
 
 Export the current database (and its tables/rows) as a config-like object. Returns **Promise&lt;object&gt;**.
 
+### db.subscribe(callback) / db.subscribe(tableName, callback) / db.subscribe(tableName, rowId, callback)
+
+Subscribe to change events. When any code mutates the database (insert, update, delete, createTable, deleteTable), all matching subscribers receive an event. Use this so **multiple components** that share the same `Database` instance can react to changes without polling—e.g. Component A updates a row and Component B (subscribed to that table) receives the event and refreshes its view.
+
+- **subscribe(callback)** – subscribe to all changes in this database.
+- **subscribe(tableName, callback)** – subscribe only to changes for `tableName`.
+- **subscribe(tableName, rowId, callback)** – subscribe only to changes for that row.
+
+Returns a function **unsubscribe()** – call it to stop receiving events.
+
+Every matching subscriber receives the event (multiple components can subscribe to the same table or row). If no one has subscribed, the database behaves as before; subscription is optional.
+
+```js
+const unsubscribe = db.subscribe('todos', (event) => {
+  console.log(event.type, event.tableName, event.row);
+  // event.type: 'insert' | 'update' | 'delete' | 'tableCreated' | 'tableDeleted'
+  // event.row, event.rowId, event.previousRow (for update/delete)
+});
+// later: unsubscribe();
+```
+
+### db.unsubscribe(id)
+
+Remove a subscription by id. Prefer using the function returned from **subscribe()** instead.
+
+### Change event shape (StorionChangeEvent)
+
+- **type** – `'insert' | 'update' | 'delete' | 'tableCreated' | 'tableDeleted'`
+- **dbName** – database name
+- **tableName** – table name
+- **row** – inserted/updated row (current state); for delete, see **previousRow**
+- **rowId** – id of the row (for update/delete)
+- **previousRow** – for `update` and `delete`, the row before the change
+
+### db.setChangeBroadcaster(broadcaster)
+
+Optional. Set an object with **broadcastChange(event)** to send change events to another context (e.g. for cross-context sync in a Chrome extension). The same event payload is passed to local subscribers and to the broadcaster. Omit or pass `null` to disable.
+
+---
+
+## createChangeListener(transport, onChange)
+
+Helper for **receiving** Storion change events from another context (e.g. a Chrome extension, another window, or a background script) over a custom transport.
+
+- **transport.onMessage(handler)** – function you provide that registers a message handler and returns an optional unsubscribe function. The handler should be called with messages that are already decoded `StorionChangeEvent`-like objects.
+- **onChange(event)** – callback that will be invoked whenever a valid `StorionChangeEvent` is received.
+
+Returns a function **unsubscribe()** that detaches the listener (if the transport provided one).
+
+```js
+// Example: adapter around window.postMessage
+const transport = {
+  onMessage(handler) {
+    function listener(ev) {
+      // assume ev.data is already a StorionChangeEvent from another context
+      handler(ev.data);
+    }
+    window.addEventListener('message', listener);
+    return () => window.removeEventListener('message', listener);
+  }
+};
+
+const stop = createChangeListener(transport, (event) => {
+  console.log('Received change from another context:', event);
+  // e.g. trigger a UI refresh or sync a local Database instance
+});
+
+// later:
+stop();
+```
+
+Only messages that look like a valid `StorionChangeEvent` are forwarded to **onChange**; other messages on the same transport are ignored.
+
 ---
 
 ## Query engine (standalone)

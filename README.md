@@ -10,6 +10,8 @@ Framework-agnostic client-side database for the browser. Use it with **React**, 
 - **CRUD** – Insert, fetch, update, and delete records
 - **Query engine** – Run JSON queries (where, orderBy, limit, offset) directly on tables
 - **Config from file** – Create a database from a config object or load config from a URL/file
+- **Change subscription** – Subscribe to table or row changes so multiple components stay in sync when data is updated (no polling)
+ - **Cross-context ready** – Optional broadcaster + listener helpers so an extension, background script, or another tab can stream change events to your UI
 
 ## Install
 
@@ -148,6 +150,77 @@ const { rows, totalCount } = await db.query('users', {
 
 Full reference: [docs/QUERY_LANGUAGE.md](docs/QUERY_LANGUAGE.md).
 
+## Subscribing to changes
+
+When multiple components share the same `Database` instance, they can subscribe to change events so that when one component inserts, updates, or deletes data, the others receive an event and can refresh or react—without polling.
+
+```js
+const db = await createDatabase({ name: 'myapp', storage: 'localStorage' });
+
+// Subscribe to all changes in a table
+const unsubscribe = db.subscribe('todos', (event) => {
+  console.log(event.type, event.row); // 'insert' | 'update' | 'delete' | 'tableCreated' | 'tableDeleted'
+  // Refresh your UI or state here
+});
+
+// Or subscribe to all tables: db.subscribe((event) => { ... })
+// Or subscribe to one row: db.subscribe('todos', 1, (event) => { ... })
+
+// When done: unsubscribe();
+```
+
+Every matching subscriber receives the event (multiple components can subscribe to the same table or row). If no one subscribes, the database behaves as before. Full details: [docs/API.md#dbsubscribe](docs/API.md).
+
+## Cross-context sync (extension ↔ webapp)
+
+Storion can also be used as the **source of truth in one context** (e.g. a Chrome extension or background script) and stream change events to another context (e.g. a webapp UI) using a broadcaster + listener pattern.
+
+```js
+import { createDatabase, createChangeListener } from 'storion';
+
+// 1) Producer side (e.g. extension popup/background)
+const db = await createDatabase({ name: 'myapp', storage: 'localStorage' });
+
+// Forward normalized StorionChangeEvent payloads to the active tab.
+db.setChangeBroadcaster({
+  async broadcastChange(event) {
+    if (typeof chrome !== 'undefined' && chrome.tabs && chrome.tabs.query) {
+      // Chrome extension context: send to the active tab's content script
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        const tab = tabs && tabs[0];
+        if (!tab || !tab.id) return;
+        chrome.tabs.sendMessage(tab.id, { action: 'storionChangeEvent', event });
+      });
+    } else {
+      // Fallback: same-window postMessage (e.g. two iframes or tabs using BroadcastChannel)
+      window.postMessage({ source: 'storion-change', payload: event }, '*');
+    }
+  }
+});
+
+// 2) Consumer side (e.g. webapp page or another tab)
+const transport = {
+  onMessage(handler) {
+    function listener(ev) {
+      if (!ev.data || ev.data.source !== 'storion-change') return;
+      handler(ev.data.payload);
+    }
+    window.addEventListener('message', listener);
+    return () => window.removeEventListener('message', listener);
+  }
+};
+
+const stop = createChangeListener(transport, (event) => {
+  // React to inserts/updates/deletes coming from another context
+  console.log('Cross-context change:', event.type, event.tableName, event.row);
+});
+
+// later, when you no longer need updates:
+// stop();
+```
+
+The same `StorionChangeEvent` payload is delivered to **local subscribers** and to the **broadcaster**, and `createChangeListener` normalizes incoming messages on the receiving side. See [docs/API.md#createChangeListenertransport-onchange](docs/API.md) for details and Chrome-extension-specific wiring in the Storion Studio README.
+
 ## API overview
 
 | Method | Description |
@@ -165,6 +238,10 @@ Full reference: [docs/QUERY_LANGUAGE.md](docs/QUERY_LANGUAGE.md).
 | `db.delete(table, id)` | Delete a row by id. |
 | `db.deleteTable(name)` | Delete a table. |
 | `db.exportConfig()` | Export DB as config-like object. |
+| `db.subscribe(callback)` / `db.subscribe(table, callback)` / `db.subscribe(table, rowId, callback)` | Subscribe to change events; returns `unsubscribe()`. |
+| `db.unsubscribe(id)` | Remove a subscription by id. |
+| `db.setChangeBroadcaster(broadcaster)` | Optional: broadcast changes to another context (e.g. extension ↔ page). |
+| `createChangeListener(transport, onChange)` | Listen for change events coming from another context via a custom transport. |
 
 Full API: [docs/API.md](docs/API.md).
 
@@ -178,7 +255,7 @@ All data for a given storage key is stored in one place (default key: `__LS_DB__
 
 ## Usage with React / Vue / Angular
 
-Use the same API in any framework. Example with React:
+Use the same API in any framework. Share one `Database` instance (e.g. via context, service, or singleton) so that `db.subscribe()` keeps all components in sync when data changes. Example with React:
 
 ```js
 import { createDatabase } from 'storion';
@@ -189,11 +266,17 @@ function UserList() {
   const [users, setUsers] = useState([]);
 
   useEffect(() => {
+    let unsubscribe;
     createDatabase({ name: 'myapp', storage: 'localStorage' }).then(async (database) => {
       setDb(database);
       const { rows } = await database.query('users', { limit: 50 });
       setUsers(rows);
+      unsubscribe = database.subscribe('users', async () => {
+        const { rows: next } = await database.query('users', { limit: 50 });
+        setUsers(next);
+      });
     });
+    return () => unsubscribe?.();
   }, []);
 
   if (!db) return <div>Loading...</div>;

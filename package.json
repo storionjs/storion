@@ -20,6 +20,7 @@
   ],
   "scripts": {
     "build": "node build.js",
+    "build:cdn": "node build-cdn.js",
     "prepublishOnly": "npm run build"
   },
   "keywords": [
@@ -38,5 +39,8 @@
   ],
   "author": "",
   "license": "MIT",
-  "sideEffects": false
+  "sideEffects": false,
+  "devDependencies": {
+    "esbuild": "^0.24.0"
+  }
 }
