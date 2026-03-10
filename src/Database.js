@@ -103,6 +103,87 @@ class Database {
     this._adapter = adapter;
     this._isAsync = !!adapter.isAsync;
     this._data = { databases: {} };
+    this._subscribers = [];
+    this._nextSubId = 0;
+    this._changeBroadcaster = null;
+  }
+
+  _emitChange(event) {
+    if (this._subscribers.length === 0 && !this._changeBroadcaster) return;
+    const payload = {
+      type: event.type,
+      dbName: this.name,
+      tableName: event.tableName,
+      ...(event.row != null && { row: event.row }),
+      ...(event.rowId != null && { rowId: event.rowId }),
+      ...(event.previousRow != null && { previousRow: event.previousRow })
+    };
+    for (const sub of this._subscribers) {
+      if (sub.tableName != null && sub.tableName !== event.tableName) continue;
+      if (sub.rowId != null && (event.rowId == null || String(event.rowId) !== String(sub.rowId))) continue;
+      try {
+        sub.callback(payload);
+      } catch (err) {
+        if (typeof console !== 'undefined' && console.error) {
+          console.error('[Storion] subscriber callback error:', err);
+        }
+      }
+    }
+    if (this._changeBroadcaster && typeof this._changeBroadcaster.broadcastChange === 'function') {
+      try {
+        const result = this._changeBroadcaster.broadcastChange(payload);
+        if (result && typeof result.catch === 'function') result.catch(() => {});
+      } catch (err) {
+        if (typeof console !== 'undefined' && console.error) {
+          console.error('[Storion] broadcaster error:', err);
+        }
+      }
+    }
+  }
+
+  /**
+   * Subscribe to change events. Overloads:
+   * - subscribe(callback) — all changes in this database
+   * - subscribe(tableName, callback) — changes for one table
+   * - subscribe(tableName, rowId, callback) — changes for one row
+   * @returns {function()} unsubscribe function
+   */
+  subscribe(tableNameOrCallback, rowIdOrCallback, maybeCallback) {
+    let tableName = null;
+    let rowId = null;
+    let callback;
+    if (typeof tableNameOrCallback === 'function') {
+      callback = tableNameOrCallback;
+    } else if (typeof rowIdOrCallback === 'function') {
+      tableName = tableNameOrCallback;
+      callback = rowIdOrCallback;
+    } else {
+      tableName = tableNameOrCallback;
+      rowId = rowIdOrCallback;
+      callback = maybeCallback;
+    }
+    if (typeof callback !== 'function') {
+      throw new Error('subscribe requires a callback function');
+    }
+    const id = ++this._nextSubId;
+    this._subscribers.push({ id, tableName, rowId, callback });
+    return () => this.unsubscribe(id);
+  }
+
+  /**
+   * Remove a subscription by id (or by the function returned from subscribe).
+   * @param {number} id - subscription id returned from subscribe (or use the returned unsubscribe function)
+   */
+  unsubscribe(id) {
+    this._subscribers = this._subscribers.filter(s => s.id !== id);
+  }
+
+  /**
+   * Set an optional broadcaster for cross-context sync (e.g. Phase 2: extension ↔ webapp).
+   * @param {{ broadcastChange: function(object): void|Promise }} broadcaster - object with broadcastChange(event)
+   */
+  setChangeBroadcaster(broadcaster) {
+    this._changeBroadcaster = broadcaster || null;
   }
 
   async _load() {
@@ -150,6 +231,7 @@ class Database {
 
     db.tables[tableName] = { columns: normalized, rows: [] };
     await this._save();
+    this._emitChange({ type: 'tableCreated', tableName });
     return true;
   }
 
@@ -223,6 +305,7 @@ class Database {
     table.rows = table.rows || [];
     table.rows.push({ ...coerced });
     await this._save();
+    this._emitChange({ type: 'insert', tableName, row: { ...coerced } });
     return coerced;
   }
 
@@ -300,8 +383,16 @@ class Database {
         throw new Error(`Foreign key violation: value ${val} not found in ${refTable}.${refCol}`);
       }
     }
+    const previousRow = { ...rows[idx] };
     Object.assign(rows[idx], coerced);
     await this._save();
+    this._emitChange({
+      type: 'update',
+      tableName,
+      rowId: id,
+      row: { ...rows[idx] },
+      previousRow
+    });
     return rows[idx];
   }
 
@@ -332,10 +423,12 @@ class Database {
     }
 
     const rows = db.tables[tableName].rows || [];
-    const newRows = rows.filter(r => r.id != id);
-    if (newRows.length === rows.length) throw new Error(`Row with id ${id} not found`);
-    db.tables[tableName].rows = newRows;
+    const deletedRow = rows.find(r => r.id == id);
+    if (!deletedRow) throw new Error(`Row with id ${id} not found`);
+    const previousRow = { ...deletedRow };
+    db.tables[tableName].rows = rows.filter(r => r.id != id);
     await this._save();
+    this._emitChange({ type: 'delete', tableName, rowId: id, previousRow });
     return true;
   }
 
@@ -362,6 +455,7 @@ class Database {
     }
     delete db.tables[tableName];
     await this._save();
+    this._emitChange({ type: 'tableDeleted', tableName });
     return true;
   }
 

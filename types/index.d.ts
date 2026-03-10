@@ -50,6 +50,31 @@ export interface FetchOptions {
   limit?: number;
 }
 
+/** Change event emitted after insert, update, delete, createTable, or deleteTable. */
+export interface StorionChangeEvent {
+  type: 'insert' | 'update' | 'delete' | 'tableCreated' | 'tableDeleted';
+  dbName: string;
+  tableName: string;
+  row?: Record<string, unknown>;
+  rowId?: number | string;
+  previousRow?: Record<string, unknown>;
+}
+
+/** Generic transport interface for receiving change events from another context. */
+export interface ChangeTransport {
+  /**
+   * Register a message handler. The handler will be called with messages that
+   * should represent StorionChangeEvent-like objects. Returns an optional
+   * function that can be called to unsubscribe.
+   */
+  onMessage(handler: (message: unknown) => void): (() => void) | void;
+}
+
+/** Optional broadcaster for cross-context sync (e.g. extension ↔ webapp). */
+export interface ChangeBroadcaster {
+  broadcastChange(event: StorionChangeEvent): void | Promise<void>;
+}
+
 export function createDatabase(options: CreateDatabaseOptions): Promise<Database>;
 
 export function loadConfigFromUrl(url: string): Promise<DBConfig>;
@@ -94,4 +119,24 @@ export interface Database {
   delete(tableName: string, id: number | string): Promise<boolean>;
   deleteTable(tableName: string): Promise<boolean>;
   exportConfig(): Promise<DBConfig>;
+  /** Subscribe to all changes in this database. Returns unsubscribe function. */
+  subscribe(callback: (event: StorionChangeEvent) => void): () => void;
+  /** Subscribe to changes for one table. Returns unsubscribe function. */
+  subscribe(tableName: string, callback: (event: StorionChangeEvent) => void): () => void;
+  /** Subscribe to changes for one row. Returns unsubscribe function. */
+  subscribe(tableName: string, rowId: number | string, callback: (event: StorionChangeEvent) => void): () => void;
+  /** Remove subscription by id (prefer using the function returned from subscribe). */
+  unsubscribe(id: number): void;
+  /** Set optional broadcaster for cross-context sync (Phase 2). */
+  setChangeBroadcaster(broadcaster: ChangeBroadcaster | null): void;
 }
+
+/**
+ * Create a listener for change events coming from another context (e.g. from
+ * a Chrome extension or another window) via a user-provided transport.
+ * Returns a function to unsubscribe.
+ */
+export function createChangeListener(
+  transport: ChangeTransport,
+  onChange: (event: StorionChangeEvent) => void
+): () => void;
