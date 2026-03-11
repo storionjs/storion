@@ -1,17 +1,43 @@
-# storion
+# Storion
 
-Framework-agnostic client-side database for the browser. Use it with **React**, **Vue**, **Angular**, or vanilla JS. No framework-specific code—just create databases, tables, save/fetch records, and run JSON queries on **localStorage**, **sessionStorage**, or **IndexedDB**.
+**Framework-agnostic client-side database for the browser.** Use it with React, Vue, Angular, Svelte, or vanilla JS. Create databases, tables, save and fetch records, and run JSON queries on **localStorage**, **sessionStorage**, or **IndexedDB**.
+
+[![npm](https://img.shields.io/npm/v/@storion/storion.svg)](https://www.npmjs.com/package/@storion/storion)
+[![GitHub](https://img.shields.io/badge/GitHub-storionjs%2Fstorion-blue?logo=github)](https://github.com/storionjs/storion)
+
+---
+
+## Table of contents
+
+- [Features](#features)
+- [Install](#install)
+- [Quick start](#quick-start)
+- [Documentation](#documentation)
+- [Database from config](#database-from-config)
+- [Query language](#query-language)
+- [Subscribing to changes](#subscribing-to-changes)
+- [Cross-context sync (e.g. extensions)](#cross-context-sync-eg-extensions)
+- [Storage backends](#storage-backends)
+- [Usage with React / Vue / Angular](#usage-with-react--vue--angular)
+- [API reference](#api-reference)
+- [Links](#links)
+
+---
 
 ## Features
 
-- **Framework-agnostic** – Works with any frontend (React, Vue, Angular, Svelte, etc.)
-- **Multiple stores** – Create databases in `localStorage`, `sessionStorage`, or `indexedDB`
-- **Tables** – Define tables with columns (int, float, boolean, string) and optional foreign keys
-- **CRUD** – Insert, fetch, update, and delete records
-- **Query engine** – Run JSON queries (where, orderBy, limit, offset) directly on tables
-- **Config from file** – Create a database from a config object or load config from a URL/file
-- **Change subscription** – Subscribe to table or row changes so multiple components stay in sync when data is updated (no polling)
- - **Cross-context ready** – Optional broadcaster + listener helpers so an extension, background script, or another tab can stream change events to your UI
+| Feature | Description |
+|--------|-------------|
+| **Framework-agnostic** | Works with any frontend; no framework-specific code. |
+| **Multiple stores** | Use `localStorage`, `sessionStorage`, or `indexedDB`. |
+| **Tables & schema** | Define tables with columns (int, float, boolean, string, json) and optional foreign keys. |
+| **CRUD** | Insert, fetch, update, and delete records with a simple API. |
+| **Query engine** | Run JSON queries: `where`, `orderBy`, `limit`, `offset`. |
+| **Config from file/URL** | Create a database from a config object or load config from a URL or file. |
+| **Change subscription** | Subscribe to table or row changes so components stay in sync without polling. |
+| **Cross-context** | Optional broadcaster + listener for extensions, background scripts, or multiple tabs. |
+
+---
 
 ## Install
 
@@ -19,12 +45,17 @@ Framework-agnostic client-side database for the browser. Use it with **React**, 
 npm install @storion/storion
 ```
 
+- **npm:** [https://www.npmjs.com/package/@storion/storion](https://www.npmjs.com/package/@storion/storion)
+- **Source & issues:** [https://github.com/storionjs/storion](https://github.com/storionjs/storion)
+
+---
+
 ## Quick start
 
 ```js
 import { createDatabase } from '@storion/storion';
 
-// Create a database in localStorage (or sessionStorage / indexedDB)
+// Create a database (localStorage, sessionStorage, or indexedDB)
 const db = await createDatabase({
   name: 'myapp',
   storage: 'localStorage'
@@ -59,13 +90,27 @@ await db.update('users', 1, { name: 'Alice Smith' });
 await db.delete('users', 2);
 ```
 
-## Create database from config
+---
+
+## Documentation
+
+| Document | Description |
+|----------|-------------|
+| [**API reference**](docs/API.md) | Full API for `createDatabase`, `Database` methods, and helpers. |
+| [**Config format**](docs/CONFIG_FORMAT.md) | How to define tables and databases in a config object or JSON file. |
+| [**Query language**](docs/QUERY_LANGUAGE.md) | `where`, `orderBy`, operators, and examples. |
+
+---
+
+## Database from config
 
 You can create a database and its tables from a **config object** (e.g. from a JSON file).
 
 ### Config in code
 
 ```js
+import { createDatabase } from '@storion/storion';
+
 const config = {
   tables: {
     users: {
@@ -120,19 +165,21 @@ const db = await createDatabase({
 });
 ```
 
-Config format and options are described in [docs/CONFIG_FORMAT.md](docs/CONFIG_FORMAT.md).
+See [Config format](docs/CONFIG_FORMAT.md) for the full schema and options.
+
+---
 
 ## Query language
 
-Use `db.query(tableName, query)` with a JSON query:
+Use `db.query(tableName, query)` with a JSON query object:
 
-- **where** – Filter: `{ field, op, value }` or `{ and: [...] }` / `{ or: [...] }`
-- **orderBy** – Sort: `[{ field, direction: 'asc' | 'desc' }]`
-- **limit** / **offset** – Pagination
+| Key | Description |
+|-----|-------------|
+| **where** | Filter: `{ field, op, value }` or `{ and: [...] }` / `{ or: [...] }`. |
+| **orderBy** | Sort: `[{ field, direction: 'asc' \| 'desc' }]`. |
+| **limit** / **offset** | Pagination. |
 
-Operators: `eq`, `ne`, `gt`, `gte`, `lt`, `lte`, `contains`, `startsWith`, `endsWith`, `in`, `notIn`, `isNull`, `isNotNull`.
-
-Example:
+**Operators:** `eq`, `ne`, `gt`, `gte`, `lt`, `lte`, `contains`, `startsWith`, `endsWith`, `in`, `notIn`, `isNull`, `isNotNull`.
 
 ```js
 const { rows, totalCount } = await db.query('users', {
@@ -148,11 +195,13 @@ const { rows, totalCount } = await db.query('users', {
 });
 ```
 
-Full reference: [docs/QUERY_LANGUAGE.md](docs/QUERY_LANGUAGE.md).
+Full reference: [Query language](docs/QUERY_LANGUAGE.md).
+
+---
 
 ## Subscribing to changes
 
-When multiple components share the same `Database` instance, they can subscribe to change events so that when one component inserts, updates, or deletes data, the others receive an event and can refresh or react—without polling.
+When multiple components share the same `Database` instance, they can subscribe to change events so that when one component inserts, updates, or deletes data, the others receive an event and can refresh—without polling.
 
 ```js
 const db = await createDatabase({ name: 'myapp', storage: 'localStorage' });
@@ -163,99 +212,79 @@ const unsubscribe = db.subscribe('todos', (event) => {
   // Refresh your UI or state here
 });
 
-// Or subscribe to all tables: db.subscribe((event) => { ... })
-// Or subscribe to one row: db.subscribe('todos', 1, (event) => { ... })
+// Subscribe to all tables:  db.subscribe((event) => { ... })
+// Subscribe to one row:     db.subscribe('todos', 1, (event) => { ... })
 
-// When done: unsubscribe();
+// When done:
+unsubscribe();
 ```
 
-Every matching subscriber receives the event (multiple components can subscribe to the same table or row). If no one subscribes, the database behaves as before. Full details: [docs/API.md#dbsubscribe](docs/API.md).
+See [API — db.subscribe](docs/API.md) for details.
 
-## Cross-context sync (extension ↔ webapp)
+---
 
-Storion can also be used as the **source of truth in one context** (e.g. a Chrome extension or background script) and stream change events to another context (e.g. a webapp UI) using a broadcaster + listener pattern.
+## Cross-context sync (e.g. extensions)
+
+Use Storion in one context (e.g. Chrome extension or background script) and stream change events to another (e.g. web app UI) with a broadcaster + listener.
 
 ```js
 import { createDatabase, createChangeListener } from '@storion/storion';
 
-// 1) Producer side (e.g. extension popup/background)
+// 1) Producer (e.g. extension popup/background)
 const db = await createDatabase({ name: 'myapp', storage: 'localStorage' });
 
-// Forward normalized StorionChangeEvent payloads to the active tab.
 db.setChangeBroadcaster({
   async broadcastChange(event) {
-    if (typeof chrome !== 'undefined' && chrome.tabs && chrome.tabs.query) {
-      // Chrome extension context: send to the active tab's content script
+    if (typeof chrome !== 'undefined' && chrome.tabs?.query) {
       chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-        const tab = tabs && tabs[0];
-        if (!tab || !tab.id) return;
-        chrome.tabs.sendMessage(tab.id, { action: 'storionChangeEvent', event });
+        const tab = tabs?.[0];
+        if (tab?.id) chrome.tabs.sendMessage(tab.id, { action: 'storionChangeEvent', event });
       });
     } else {
-      // Fallback: same-window postMessage (e.g. two iframes or tabs using BroadcastChannel)
       window.postMessage({ source: 'storion-change', payload: event }, '*');
     }
   }
 });
 
-// 2) Consumer side (e.g. webapp page or another tab)
+// 2) Consumer (e.g. web app or another tab)
 const transport = {
   onMessage(handler) {
-    function listener(ev) {
-      if (!ev.data || ev.data.source !== 'storion-change') return;
+    const listener = (ev) => {
+      if (ev.data?.source !== 'storion-change') return;
       handler(ev.data.payload);
-    }
+    };
     window.addEventListener('message', listener);
     return () => window.removeEventListener('message', listener);
   }
 };
 
 const stop = createChangeListener(transport, (event) => {
-  // React to inserts/updates/deletes coming from another context
   console.log('Cross-context change:', event.type, event.tableName, event.row);
 });
-
-// later, when you no longer need updates:
-// stop();
+// Later: stop();
 ```
 
-The same `StorionChangeEvent` payload is delivered to **local subscribers** and to the **broadcaster**, and `createChangeListener` normalizes incoming messages on the receiving side. See [docs/API.md#createChangeListenertransport-onchange](docs/API.md) for details and Chrome-extension-specific wiring in the Storion Studio README.
+See [API — createChangeListener](docs/API.md) and [API — setChangeBroadcaster](docs/API.md) for details.
 
-## API overview
-
-| Method | Description |
-|--------|-------------|
-| `createDatabase(options)` | Create or connect to a DB (name, storage, optional config). |
-| `loadConfigFromUrl(url)` | Fetch config JSON from a URL. |
-| `loadConfigFromFile(file)` | Read config from a File (e.g. file input). |
-| `db.createTable(name, columns)` | Create a table. |
-| `db.listTables()` | List table names. |
-| `db.getTable(name)` | Get table structure and rows. |
-| `db.insert(table, row)` | Insert a row (id auto if omitted). |
-| `db.fetch(table, options?)` | Fetch rows (optional filter, sort, limit). |
-| `db.query(table, query)` | Run JSON query; returns `{ rows, totalCount }`. |
-| `db.update(table, id, data)` | Update a row by id. |
-| `db.delete(table, id)` | Delete a row by id. |
-| `db.deleteTable(name)` | Delete a table. |
-| `db.exportConfig()` | Export DB as config-like object. |
-| `db.subscribe(callback)` / `db.subscribe(table, callback)` / `db.subscribe(table, rowId, callback)` | Subscribe to change events; returns `unsubscribe()`. |
-| `db.unsubscribe(id)` | Remove a subscription by id. |
-| `db.setChangeBroadcaster(broadcaster)` | Optional: broadcast changes to another context (e.g. extension ↔ page). |
-| `createChangeListener(transport, onChange)` | Listen for change events coming from another context via a custom transport. |
-
-Full API: [docs/API.md](docs/API.md).
+---
 
 ## Storage backends
 
-- **localStorage** – Persists across sessions; same origin; ~5MB typical.
-- **sessionStorage** – Cleared when the tab/window closes; same origin.
-- **indexedDB** – Async; larger quota; good for bigger datasets.
+| Backend | Description |
+|---------|-------------|
+| **localStorage** | Persists across sessions; same origin; ~5MB typical. |
+| **sessionStorage** | Cleared when the tab/window closes; same origin. |
+| **indexedDB** | Async; larger quota; good for bigger datasets. |
 
 All data for a given storage key is stored in one place (default key: `__LS_DB__`). Multiple logical databases (different `name`s) can coexist under the same key.
 
+---
+
 ## Usage with React / Vue / Angular
 
-Use the same API in any framework. Share one `Database` instance (e.g. via context, service, or singleton) so that `db.subscribe()` keeps all components in sync when data changes. Example with React:
+Use the same API in any framework. Share one `Database` instance (e.g. via context, service, or singleton) so `db.subscribe()` keeps all components in sync.
+
+**Example with React:**
 
 ```js
 import { createDatabase } from '@storion/storion';
@@ -290,8 +319,41 @@ function UserList() {
 }
 ```
 
-No framework-specific bindings—just call the async API and set state as needed.
+No framework-specific bindings—call the async API and set state as needed.
 
-## License
+---
 
-MIT
+## API reference
+
+| Method / API | Description |
+|--------------|-------------|
+| `createDatabase(options)` | Create or connect to a DB (name, storage, optional config). |
+| `loadConfigFromUrl(url)` | Fetch config JSON from a URL. |
+| `loadConfigFromFile(file)` | Read config from a `File` (e.g. file input). |
+| `db.createTable(name, columns)` | Create a table. |
+| `db.listTables()` | List table names. |
+| `db.getTable(name)` | Get table structure and rows. |
+| `db.insert(table, row)` | Insert a row (id auto if omitted). |
+| `db.fetch(table, options?)` | Fetch rows (optional filter, sort, limit). |
+| `db.query(table, query)` | Run JSON query; returns `{ rows, totalCount }`. |
+| `db.update(table, id, data)` | Update a row by id. |
+| `db.delete(table, id)` | Delete a row by id. |
+| `db.deleteTable(name)` | Delete a table. |
+| `db.exportConfig()` | Export DB as config-like object. |
+| `db.subscribe(callback)` / `db.subscribe(table, callback)` / `db.subscribe(table, rowId, callback)` | Subscribe to change events; returns `unsubscribe()`. |
+| `db.unsubscribe(id)` | Remove a subscription by id. |
+| `db.setChangeBroadcaster(broadcaster)` | Optional: broadcast changes to another context. |
+| `createChangeListener(transport, onChange)` | Listen for change events from another context via a custom transport. |
+
+Full details: [API reference](docs/API.md).
+
+---
+
+## Links
+
+| Resource | URL |
+|----------|-----|
+| **GitHub** | [https://github.com/storionjs/storion](https://github.com/storionjs/storion) |
+| **npm** | [https://www.npmjs.com/package/@storion/storion](https://www.npmjs.com/package/@storion/storion) |
+| **Issues** | [https://github.com/storionjs/storion/issues](https://github.com/storionjs/storion/issues) |
+| **License** | MIT |
