@@ -1,6 +1,6 @@
 {
   "name": "@storion/storion",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Framework-agnostic client-side database with localStorage, sessionStorage, and IndexedDB. Create databases, tables, save/fetch records, and run JSON queries.",
   "type": "module",
   "main": "dist/index.js",
