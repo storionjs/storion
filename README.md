@@ -4,6 +4,7 @@
 
 [![npm](https://img.shields.io/npm/v/@storion/storion.svg)](https://www.npmjs.com/package/@storion/storion)
 [![GitHub](https://img.shields.io/badge/GitHub-storionjs%2Fstorion-blue?logo=github)](https://github.com/storionjs/storion)
+[![Documentation](https://storionjs.github.io/storion-docs/)](https://storionjs.github.io/storion-docs/)
 
 ---
 
