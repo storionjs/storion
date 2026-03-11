@@ -94,6 +94,8 @@ await db.delete('users', 2);
 
 ## Documentation
 
+**Documentation:** https://storionjs.github.io/storion-docs/
+
 | Document | Description |
 |----------|-------------|
 | [**API reference**](docs/API.md) | Full API for `createDatabase`, `Database` methods, and helpers. |
