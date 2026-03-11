@@ -16,13 +16,13 @@ Framework-agnostic client-side database for the browser. Use it with **React**, 
 ## Install
 
 ```bash
-npm install storion
+npm install @storion/storion
 ```
 
 ## Quick start
 
 ```js
-import { createDatabase } from 'storion';
+import { createDatabase } from '@storion/storion';
 
 // Create a database in localStorage (or sessionStorage / indexedDB)
 const db = await createDatabase({
@@ -95,7 +95,7 @@ const db = await createDatabase({
 ### Load config from URL
 
 ```js
-import { createDatabase, loadConfigFromUrl } from 'storion';
+import { createDatabase, loadConfigFromUrl } from '@storion/storion';
 
 const config = await loadConfigFromUrl('/config/db.json');
 const db = await createDatabase({
@@ -108,7 +108,7 @@ const db = await createDatabase({
 ### Load config from file (e.g. file input)
 
 ```js
-import { createDatabase, loadConfigFromFile } from 'storion';
+import { createDatabase, loadConfigFromFile } from '@storion/storion';
 
 // <input type="file" id="configFile" accept=".json" />
 const file = document.getElementById('configFile').files[0];
@@ -176,7 +176,7 @@ Every matching subscriber receives the event (multiple components can subscribe 
 Storion can also be used as the **source of truth in one context** (e.g. a Chrome extension or background script) and stream change events to another context (e.g. a webapp UI) using a broadcaster + listener pattern.
 
 ```js
-import { createDatabase, createChangeListener } from 'storion';
+import { createDatabase, createChangeListener } from '@storion/storion';
 
 // 1) Producer side (e.g. extension popup/background)
 const db = await createDatabase({ name: 'myapp', storage: 'localStorage' });
@@ -258,7 +258,7 @@ All data for a given storage key is stored in one place (default key: `__LS_DB__
 Use the same API in any framework. Share one `Database` instance (e.g. via context, service, or singleton) so that `db.subscribe()` keeps all components in sync when data changes. Example with React:
 
 ```js
-import { createDatabase } from 'storion';
+import { createDatabase } from '@storion/storion';
 import { useEffect, useState } from 'react';
 
 function UserList() {

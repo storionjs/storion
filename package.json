@@ -1,5 +1,5 @@
 {
-  "name": "storion",
+  "name": "@storion/storion",
   "version": "1.0.0",
   "description": "Framework-agnostic client-side database with localStorage, sessionStorage, and IndexedDB. Create databases, tables, save/fetch records, and run JSON queries.",
   "type": "module",
@@ -39,6 +39,14 @@
   ],
   "author": "",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/storionjs/storion.git"
+  },
+  "bugs": {
+    "url": "https://github.com/storionjs/storion/issues"
+  },
+  "homepage": "https://github.com/storionjs/storion#readme",
   "sideEffects": false,
   "devDependencies": {
     "esbuild": "^0.24.0"
