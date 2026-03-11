@@ -12,6 +12,7 @@
 - [Features](#features)
 - [Install](#install)
 - [Quick start](#quick-start)
+- [Common examples](#common-examples)
 - [Documentation](#documentation)
 - [Database from config](#database-from-config)
 - [Query language](#query-language)
@@ -88,6 +89,53 @@ const { rows, totalCount } = await db.query('users', {
 // Update and delete
 await db.update('users', 1, { name: 'Alice Smith' });
 await db.delete('users', 2);
+```
+
+---
+
+## Common examples
+
+### Example: simple todo list (localStorage)
+
+```js
+import { createDatabase } from '@storion/storion';
+
+const db = await createDatabase({
+  name: 'todo-app',
+  storage: 'localStorage'
+});
+
+await db.createTable('todos', [
+  { name: 'id', type: 'int' },
+  { name: 'title', type: 'string' },
+  { name: 'done', type: 'boolean' }
+]);
+
+// Add a todo
+await db.insert('todos', { title: 'Ship Storion docs', done: false });
+
+// Get all open todos
+const openTodos = await db.fetch('todos', {
+  filter: { done: false },
+  sortBy: 'id'
+});
+```
+
+### Example: admin-style querying
+
+```js
+// Fetch the 20 latest active users whose name contains "smith"
+const { rows, totalCount } = await db.query('users', {
+  where: {
+    and: [
+      { field: 'active', op: 'eq', value: true },
+      { field: 'name', op: 'contains', value: 'smith' }
+    ]
+  },
+  orderBy: [{ field: 'created_at', direction: 'desc' }],
+  limit: 20,
+  offset: 0
+});
 ```
 
 ---
@@ -265,6 +313,42 @@ const stop = createChangeListener(transport, (event) => {
 });
 // Later: stop();
 ```
+
+---
+
+## Storion Studio (Chrome extension)
+
+**Storion Studio** is a Chrome extension that turns your browser's `localStorage` into a structured database with a visual UI—think of it as an admin console for Storion. It uses the same data layout as the `@storion/storion` npm package, so you can manage data in the extension while your web app uses the library.
+
+- **GitHub (extension):** `https://github.com/storionjs/storion-studio`
+- **Docs page:** `https://storionjs.github.io/storion-docs/storion-studio.html`
+
+### What you can do with Studio
+
+- Create, delete, and organize multiple databases.
+- Create tables with custom columns and manage schema visually.
+- Insert, read, update, and delete rows in a table grid.
+- Use a Query panel that speaks the same JSON query language as `db.query()`.
+- Export/import databases as JSON.
+- Optionally stream change events to a page that uses Storion (via `postMessage`, Chrome messaging, or other transports).
+
+### Using Studio with your app
+
+Because both Studio and the library share the same storage layout (by default under the `__LS_DB__` key in `localStorage`):
+
+- You can prototype or inspect data in Storion Studio.
+- Then point your app at the same database with:
+
+```js
+import { createDatabase } from '@storion/storion';
+
+const db = await createDatabase({
+  name: 'myapp',
+  storage: 'localStorage'
+});
+```
+
+If you want live updates from Studio into your app, wire up `setChangeBroadcaster` in the context where Studio is making changes and `createChangeListener` in your app, as shown in the [Cross-context sync](#cross-context-sync-eg-extensions) section.
 
 See [API — createChangeListener](docs/API.md) and [API — setChangeBroadcaster](docs/API.md) for details.
 
