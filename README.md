@@ -7,8 +7,9 @@
 
 ---
 
+## Documentation
 
-[![Documentation](https://storionjs.github.io/storion-docs/)](https://storionjs.github.io/storion-docs/)
+[![Storion Docs](https://storionjs.github.io/storion-docs/)](https://storionjs.github.io/storion-docs/)
 
 ---
 
