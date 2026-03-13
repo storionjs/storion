@@ -1,6 +1,6 @@
 # Storion
 
-**Framework-agnostic client-side database for the browser.** Use it with React, Vue, Angular, Svelte, or vanilla JS. Create databases, tables, save and fetch records, and run JSON queries on **localStorage**, **sessionStorage**, or **IndexedDB**.
+**Storion is a framework-agnostic, in-browser database that lets you define tables and run JSON-style queries on data stored in localStorage, sessionStorage, or IndexedDB** Use it with React, Vue, Angular, Svelte, or vanilla JS. Create databases, tables, save and fetch records, and run JSON queries on **localStorage**, **sessionStorage**, or **IndexedDB**.
 
 [![npm](https://img.shields.io/npm/v/@storion/storion.svg)](https://www.npmjs.com/package/@storion/storion)
 [![GitHub](https://img.shields.io/badge/GitHub-storionjs%2Fstorion-blue?logo=github)](https://github.com/storionjs/storion)
