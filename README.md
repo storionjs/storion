@@ -326,8 +326,9 @@ const stop = createChangeListener(transport, (event) => {
 
 **Storion Studio** is a Chrome extension that turns your browser's `localStorage` into a structured database with a visual UI—think of it as an admin console for Storion. It uses the same data layout as the `@storion/storion` npm package, so you can manage data in the extension while your web app uses the library.
 
-- **GitHub (extension):** `https://github.com/storionjs/storion-studio`
-- **Docs page:** `https://storionjs.github.io/storion-docs/storion-studio.html`
+- **Chrome Web Store:** [Storion Studio](https://chromewebstore.google.com/detail/nhjidnpjlfnejdakbiccdhmphankkocm?utm_source=item-share-cb)
+- **GitHub (extension):** [https://github.com/storionjs/storion-studio](https://github.com/storionjs/storion-studio)
+- **Docs page:** [https://storionjs.github.io/storion-docs/storion-studio.html](https://storionjs.github.io/storion-docs/storion-studio.html)
 
 ### What you can do with Studio
 
@@ -447,5 +448,6 @@ Full details: [API reference](docs/API.md).
 |----------|-----|
 | **GitHub** | [https://github.com/storionjs/storion](https://github.com/storionjs/storion) |
 | **npm** | [https://www.npmjs.com/package/@storion/storion](https://www.npmjs.com/package/@storion/storion) |
+| **Storion Studio (Chrome)** | [Chrome Web Store](https://chromewebstore.google.com/detail/nhjidnpjlfnejdakbiccdhmphankkocm?utm_source=item-share-cb) |
 | **Issues** | [https://github.com/storionjs/storion/issues](https://github.com/storionjs/storion/issues) |
 | **License** | MIT |
